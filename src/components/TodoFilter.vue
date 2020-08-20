@@ -32,7 +32,7 @@ export default {
   select{
     border: 1px solid #42b983;
     border-radius: 5px;
-    padding: 10px 0;
+    padding: 10px;
     width: 100%;
   }
 

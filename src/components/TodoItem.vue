@@ -1,15 +1,15 @@
 <template>
     <div class="todo-item">
       <div>
-        <input @change="change" type="checkbox" :checked="completed">
-        <span :class="{ completed: completed }">{{ title }}</span>
+        <input @change="change($event)" type="checkbox" :checked="parseInt(todoItem.completed)">
+        <span :class="{ completed: parseInt(todoItem.completed)}">{{ todoItem.title }}</span>
       </div>
-      <span class="remove-item" @click="removeTodo(id)">&times;</span>
+      <span class="remove-item" @click="removeTodo(todoItem.id)">&times;</span>
     </div>
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 export default {
   name: 'TodoItem',
   props: {
@@ -18,20 +18,15 @@ export default {
       required: true
     }
   },
-  data () {
-    return {
-      id: this.todoItem.id,
-      title: this.todoItem.title,
-      completed: parseInt(this.todoItem.completed)
-    }
+  computed: {
+    ...mapGetters(['isCompletedAll'])
   },
   methods: {
     ...mapActions(['changeStatus', 'removeTodo']),
-    change () {
+    change (event) {
       this.changeStatus({
-        id: this.id,
-        title: this.title,
-        completed: this.completed = !this.completed
+        id: this.todoItem.id,
+        completed: event.target.checked
       })
     }
   }
