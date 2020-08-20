@@ -33,7 +33,12 @@ export default new Vuex.Store({
     // eslint-disable-next-line no-return-assign
     setTodos: (state, data) => state.todoData = data,
     // eslint-disable-next-line no-return-assign
-    changeStatus: (state, data) => state.todoData.find(item => item.id === data.id).completed = data.completed,
+    updateTodo: (state, todo) => state.todoData.forEach(item => {
+      if (item.id === todo.id) {
+        item.title = todo.title
+        item.completed = todo.completed
+      }
+    }),
     // eslint-disable-next-line no-return-assign
     removeTodo: (state, id) => state.todoData = state.todoData.filter(item => item.id !== id),
     addTodo: (state, todo) => state.todoData.unshift(todo),
@@ -46,13 +51,10 @@ export default new Vuex.Store({
       const result = await response.data
       commit('setTodos', result)
     },
-    async changeStatus ({ commit }, todo) {
-      const response = await axios.put(
-        `todos/${todo.id}`,
-        { completed: todo.completed ? '1' : '0' }
-      )
+    async updateTodo ({ commit }, todo) {
+      const response = await axios.put(`todos/${todo.id}`, todo)
       const result = await response.data
-      commit('changeStatus', result)
+      commit('updateTodo', result)
     },
     async changeStatusAll ({ commit, state }, status) {
       const response = await axios.patch(

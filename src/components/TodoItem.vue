@@ -1,8 +1,18 @@
 <template>
     <div class="todo-item">
-      <div>
+      <div class="left">
         <input @change="change($event)" type="checkbox" :checked="parseInt(todoItem.completed)">
-        <span :class="{ completed: parseInt(todoItem.completed)}">{{ todoItem.title }}</span>
+        <span
+          @dblclick="isEdit = true"
+          v-if="!isEdit"
+          :class="{ completed: parseInt(todoItem.completed)}"
+        >{{ todoItem.title }}</span>
+        <input v-else v-focus type="text"
+               v-model="title"
+               @keyup.enter="doneEdit"
+               @keyup.esc="cancelEdit"
+               @blur="cancelEdit"
+        >
       </div>
       <span class="remove-item" @click="removeTodo(todoItem.id)">&times;</span>
     </div>
@@ -18,16 +28,44 @@ export default {
       required: true
     }
   },
+  data () {
+    return {
+      isEdit: false,
+      title: this.todoItem.title
+    }
+  },
   computed: {
     ...mapGetters(['isCompletedAll'])
   },
   methods: {
-    ...mapActions(['changeStatus', 'removeTodo']),
+    ...mapActions(['updateTodo', 'removeTodo']),
     change (event) {
-      this.changeStatus({
+      this.updateTodo({
         id: this.todoItem.id,
-        completed: event.target.checked
+        completed: event.target.checked ? '1' : '0'
       })
+    },
+    doneEdit () {
+      this.isEdit = false
+      if (this.title.trim() === '') {
+        this.cancelEdit()
+      } else {
+        this.updateTodo({
+          id: this.todoItem.id,
+          title: this.title
+        })
+      }
+    },
+    cancelEdit () {
+      this.isEdit = false
+      this.title = this.todoItem.title
+    }
+  },
+  directives: {
+    focus: {
+      inserted: function (el) {
+        el.focus()
+      }
     }
   }
 }
@@ -46,7 +84,11 @@ export default {
       background: #42b983;
     }
 
-    & input{
+    & .left {
+      padding-top: 5px;
+    }
+
+    & input[type="checkbox"]{
       margin-right: 10px;
       cursor: pointer;
     }
