@@ -47,14 +47,14 @@ export default {
     },
     doneEdit () {
       this.isEdit = false
-      if (this.title.trim() === '') {
+      if (this.title.trim() === '' || this.title === this.todoItem.title) {
         this.cancelEdit()
-      } else {
-        this.updateTodo({
-          id: this.todoItem.id,
-          title: this.title
-        })
+        return
       }
+      this.updateTodo({
+        id: this.todoItem.id,
+        title: this.title
+      })
     },
     cancelEdit () {
       this.isEdit = false
