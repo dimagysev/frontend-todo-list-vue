@@ -10,7 +10,8 @@ axios.defaults.baseURL = 'http://todolist-backend/api/'
 export default new Vuex.Store({
   state: {
     todoData: [],
-    filterTodo: 'all'
+    filterTodo: 'all',
+    token: localStorage.getItem('access_token') || null
   },
   getters: {
     getFilteredTodo: (state, getters) => {
@@ -27,7 +28,8 @@ export default new Vuex.Store({
     getActive: state => state.todoData.filter(item => item.completed === '0'),
     getCompleted: state => state.todoData.filter(item => item.completed === '1'),
     getRemaining: (state, getters) => getters.getActive.length,
-    isCompletedAll: (state, getters) => getters.getRemaining === 0
+    isCompletedAll: (state, getters) => getters.getRemaining === 0,
+    isAuth: state => !!state.token
   },
   mutations: {
     // eslint-disable-next-line no-return-assign
@@ -43,45 +45,114 @@ export default new Vuex.Store({
     removeTodo: (state, id) => state.todoData = state.todoData.filter(item => item.id !== id),
     addTodo: (state, todo) => state.todoData.unshift(todo),
     // eslint-disable-next-line no-return-assign
-    changeFilter: (state, filter) => state.filterTodo = filter
+    changeFilter: (state, filter) => state.filterTodo = filter,
+    setToken: (state, token) => {
+      state.token = token
+      localStorage.setItem('access_token', token)
+      axios.defaults.headers.common.Authorization = `Bearer ${token}`
+    },
+    clearToken: (state) => {
+      localStorage.removeItem('access_token')
+      state.token = null
+    }
   },
   actions: {
     async getTodos ({ commit }) {
-      const response = await axios.get('todos')
-      const result = await response.data
-      commit('setTodos', result)
+      // eslint-disable-next-line no-useless-catch
+      try {
+        const response = await axios.get('todos')
+        const result = await response.data
+        commit('setTodos', result)
+      } catch (e) {
+        throw e
+      }
     },
     async updateTodo ({ commit }, todo) {
-      const response = await axios.put(`todos/${todo.id}`, todo)
-      const result = await response.data
-      commit('updateTodo', result)
+      // eslint-disable-next-line no-useless-catch
+      try {
+        const response = await axios.put(`todos/${todo.id}`, todo)
+        const result = await response.data
+        commit('updateTodo', result)
+      } catch (e) {
+        throw e
+      }
     },
     async changeStatusAll ({ commit, state }, status) {
-      const response = await axios.patch(
-        '/todos/change/status-all',
-        { completed: status ? '1' : '0' }
-      )
-      const result = await response.data
-      commit('setTodos', result)
+      // eslint-disable-next-line no-useless-catch
+      try {
+        const response = await axios.patch(
+          '/todos/change/status-all',
+          { completed: status ? '1' : '0' }
+        )
+        const result = await response.data
+        commit('setTodos', result)
+      } catch (e) {
+        throw e
+      }
     },
     async removeTodo ({ commit }, id) {
-      await axios.delete(`todos/${id}`)
-      commit('removeTodo', id)
+      // eslint-disable-next-line no-useless-catch
+      try {
+        const response = await axios.delete(`todos/${id}`)
+        const data = await response.data
+        commit('removeTodo', data.id)
+      } catch (e) {
+        throw e
+      }
     },
     async removeCompleted ({ getters, dispatch }) {
-      const ids = getters.getCompleted.map(item => item.id)
-      ids.forEach(item => dispatch('removeTodo', item))
+      // eslint-disable-next-line no-useless-catch
+      try {
+        const ids = getters.getCompleted.map(item => item.id)
+        ids.forEach(item => dispatch('removeTodo', item))
+      } catch (e) {
+        throw e
+      }
     },
     async addTodo ({ commit }, todo) {
-      const response = await axios.post('todos', {
-        title: todo.title,
-        completed: '0'
-      })
-      const result = await response.data
-      commit('addTodo', result)
+      // eslint-disable-next-line no-useless-catch
+      try {
+        const response = await axios.post('todos', {
+          title: todo.title,
+          completed: '0'
+        })
+        const result = await response.data
+        commit('addTodo', result)
+      } catch (e) {
+        throw e
+      }
     },
     changeFilter ({ commit }, filter) {
       commit('changeFilter', filter)
+    },
+    async login ({ commit }, credentials) {
+      // eslint-disable-next-line no-useless-catch
+      try {
+        const response = await axios.post('login', credentials)
+        const data = await response.data
+        commit('setToken', data.token)
+      } catch (e) {
+        throw e
+      }
+    },
+    async register ({ commit }, credentials) {
+      // eslint-disable-next-line no-useless-catch
+      try {
+        const response = await axios.post('register', credentials)
+        const data = await response.data
+        commit('setToken', data.token)
+      } catch (e) {
+        throw e
+      }
+    },
+    async logout ({ commit }) {
+      // eslint-disable-next-line no-useless-catch
+      try {
+        await axios.post('logout')
+        commit('clearToken')
+      } catch (e) {
+        throw e
+      }
     }
   }
 })
